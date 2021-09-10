@@ -1,0 +1,38 @@
+{
+  "name": "mini-stores",
+  "version": "1.0.0",
+  "description": "小程序多状态管理 - 解决跨页面跨组件间通信，简洁小巧高性能，支持微信、支付宝、钉钉、百度、字节、QQ等小程序",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "scripts": {
+    "build": "babel src -d dist",
+    "watch": "babel src -w -d dist"
+  },
+  "author": "linjc (https://github.com/linjc)",
+  "keywords": [
+    "mini-stores",
+    "小程序状态管理库",
+    "小程序全局多状态管理",
+    "小程序跨页面组件通信",
+    "微信小程序状态管理",
+    "钉钉小程序状态管理",
+    "支付宝小程序状态管理",
+    "京东小程序状态管理",
+    "QQ小程序状态管理",
+    "百度小程序状态管理",
+    "字节小程序状态管理"
+  ],
+  "homepage": "https://github.com/linjc/mini-stores",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/linjc/mini-stores.git"
+  },
+  "bugs": {
+    "url": "https://github.com/linjc/mini-stores/issues"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1"
+  }
+}

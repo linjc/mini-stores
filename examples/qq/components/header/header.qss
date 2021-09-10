@@ -1,0 +1,9 @@
+.comm-header {
+  padding: 30rpx 0;
+  background-color: lightgreen;
+  font-weight: bold;
+  font-size: 30rpx;
+  line-height: 1.5;
+  color: #333;
+  text-align: center;
+}

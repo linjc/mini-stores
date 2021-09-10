@@ -1,0 +1,9 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/hello/hello"
+  ],
+  "window": {
+    "defaultTitle": "小程序多状态管理"
+  }
+}

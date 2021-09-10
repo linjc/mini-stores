@@ -1,0 +1,12 @@
+.hello {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hello-title {
+  font-size: 80rpx;
+  font-weight: bolder;
+  text-align: center
+}
