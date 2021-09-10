@@ -1,4 +1,4 @@
-const create = require('../../node_modules/mini-stores')
+const create = require('../../node_modules/mini-stores/dist')
 const helloStore = require('../../stores/helloStore')
 const indexStore = require('../../stores/indexStore')
 const globalStore = require('../../stores/globalStore')
