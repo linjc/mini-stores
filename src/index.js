@@ -155,7 +155,7 @@ function setState(vm, data) {
   vm._new_data = vm._new_data || {}
   Object.assign(vm._new_data, data)
   return new Promise(resolve => {
-    setTimeout(() => {
+    Promise.resolve().then(() => {
       if (vm._new_data) {
         const diffState = getDiffState(vm._new_data, vm.data)
         vm._new_data = null
@@ -163,7 +163,7 @@ function setState(vm, data) {
       } else {
         resolve()
       }
-    }, 0)
+    })
   })
 }
 
