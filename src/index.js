@@ -136,9 +136,7 @@ function deepCopy(data) {
     return obj
   }
   if (type === TYPE_ARRAY) {
-    const arr = []
-    data.forEach((item, index) => arr[index] = deepCopy(item))
-    return arr
+    return data.map(deepCopy)
   }
   return data
 }
@@ -158,9 +156,9 @@ function setState(vm, data) {
   Object.assign(vm._new_data, data)
   return new Promise(resolve => {
     setTimeout(() => {
-      if (Object.keys(vm._new_data).length > 0) {
+      if (vm._new_data) {
         const diffState = getDiffState(vm._new_data, vm.data)
-        vm._new_data = {}
+        vm._new_data = null
         vm.setData(diffState, resolve)
       } else {
         resolve()
