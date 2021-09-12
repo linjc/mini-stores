@@ -13,7 +13,7 @@
 - [快捷链接](#快捷链接)
 
 ## 前言
-公司好几款产品使用钉钉小程序开发，和其他平台小程序一样，没有官方实现的状态管理库，一开始写了一个[Emitter](./src/emitter.js)类，用事件监听方式去实现全局状态管理，但这种方式相对繁琐且不够直观。于是网上寻找有没有更好的解决方案，最终找到了[westore](https://github.com/Tencent/westore)库，这是由腾讯开源团队研发的微信小程序解决方案，其中针对状态管理的实现很不错，而且还使用专门为小程序开发的[JSON Diff 库](https://github.com/dntzhang/westore/blob/master/packages/westore/utils/diff.js)保证每次以最小的数据量更新状态，比原生setData的性能更好。但由于各平台小程序框架API存在一些差异，还需要改动一下才可以使用，于是在看了源码之后，基于其核心原理重写了一版，并去除了一些其他功能，只保留状态管理部分，总代码量从500行精简到了200行，另外根据自身理解做了如下改进：
+公司好几款产品使用钉钉小程序开发，和其他平台小程序一样，没有官方实现的状态管理库，用过redux、vuex、mobx等状态管理库的前端小伙伴都知道，状态管理能很轻松帮我们解决很多跨页面跨组件通信问题。一开始写了一个[Emitter](./src/emitter.js)类，用事件监听方式去实现全局状态管理，但这种方式相对繁琐且不够直观。于是网上寻找有没有更好的解决方案，最终找到了[westore](https://github.com/Tencent/westore)库，这是由腾讯开源团队研发的微信小程序解决方案，其中针对状态管理的实现很不错，而且还使用专门为小程序开发的[JSON Diff 库](https://github.com/dntzhang/westore/blob/master/packages/westore/utils/diff.js)保证每次以最小的数据量更新状态，比原生setData的性能更好。但由于各平台小程序框架API存在一些差异，还需要改动一下才可以使用，于是在看了源码之后，基于其核心原理重写了一版，并去除了一些其他功能，只保留状态管理部分，总代码量从500行精简到了200行，另外根据自身理解做了如下改进：
 
 ### 1、优化渲染效率
 每次更新store状态的时候，只对当前页面进行渲染，其他后台态页面只在再次显示的时候进行更新。这样可以大大减少同时setData的频次，提高渲染效率。
@@ -21,7 +21,7 @@
 ### 2、支持多平台
 支持微信/支付宝/钉钉/百度/字节/QQ/京东等小程序使用。
 
-多平台主要是兼容组件生命周期写法，以上除了支付宝/钉钉等阿里系小程序，其他几个小程序组件生命周期与微信小程序是一样的。对于不在以上列出的小程序，只要组件生命周期函数相同，理论上也可以直接拿来用，使用时可自行验证。
+多平台主要是兼容组件生命周期写法，对于其他小程序，只要组件生命周期函数和以上任意一个平台小程序相同，理论上也可以直接拿来用，使用时可自行验证。
 
 ### 3、支持多例store
 westore采用的是单例store，即全局只使用一个store，在大项目实际使用中，会存在一些问题：
@@ -46,7 +46,7 @@ API就几个，非常容易上手。对小程序代码零破坏零侵入性，�
 * **this.update()** 更新状态触发渲染，在页面、组件、store内使用
 * **store.update()** 其他js文件中使用，需要引入相应的store
 
-注：更新状态的函数名默认为update，可使用setUpdateName自定义，会自动注入到store和使用store的页面、组件对象上，所以在store、页面、组件对象上不要定义同名属性，避免覆盖
+注：更新状态的函数update(可使用setUpdateName自定义)，会自动注入到store和使用store的页面、组件对象上，所以在store、页面、组件对象上不要定义同名属性，避免覆盖
 
 ## 使用
 
@@ -107,7 +107,7 @@ const stores = {
 
 create.Page(stores, {
   data: {
-    privateKey: '私有状态'
+    privateData: '私有状态'
   },
   handleChangeTitle() {
     globalStore.data.title = '新标题'
@@ -137,7 +137,7 @@ const stores = {
 
 create.Component(stores, {
   data: {
-    privateKey: '私有状态'
+    privateData: '私有状态'
   },
   methods: {
     handleChangeTitle() {
@@ -159,7 +159,7 @@ create.Component(stores, {
   <view>{{$data.language}}</view>
   <view>{{$data.description}}</view>
   <view>{{$index.a.b.c}}</view>
-  <view>{{privateKey}}<view>
+  <view>{{privateData}}<view>
 </view>
 ```
 
