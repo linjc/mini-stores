@@ -12,7 +12,7 @@ function setUpdateName(name) {
 
 function initStores(stores, option) {
   option.data = option.data || {}
-  Object.keys(stores).forEach(key => {
+  Object.keys(stores || {}).forEach(key => {
     const store = stores[key]
     store.data = store.data || {}
     store[updateName] = updateState
@@ -26,8 +26,8 @@ function initStores(stores, option) {
 
 function createPage(stores, option) {
   if (!option) {
-    console.error('createPage第一个参数有误，请传入需要注入的stores对象')
-    option = stores
+    console.error('createPage参数有误')
+    option = stores || {}
     stores = {}
   }
   initStores(stores, option)
@@ -57,8 +57,8 @@ function createPage(stores, option) {
 
 function createComponent(stores, option) {
   if (!option) {
-    console.error('createComponent第一个参数有误，请传入需要注入的stores对象')
-    option = stores
+    console.error('createComponent参数有误')
+    option = stores || {}
     stores = {}
   }
   initStores(stores, option)
@@ -196,7 +196,10 @@ function stateDiff(state, preState, path, newState) {
         return
       }
       preStateKeys.forEach(key => {
-        state[key] === undefined && (state[key] = null) // 已删除的属性设置为null
+        if (state[key] === undefined) {
+          state[key] = null // 已删除的属性设置为null
+          stateKeys.indexOf(key) === -1 && stateKeys.push(key)
+        }
       })
     }
     stateKeys.forEach(key => {

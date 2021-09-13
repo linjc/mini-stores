@@ -36,7 +36,7 @@ westore采用的是单例store，即全局只使用一个store，在大项目实
 ``` js
 npm i mini-stores --save
 ```
-也可以手动下载src文件放在项目中引用
+也可以手动下载src/index.js文件放在项目中引用
 
 ## API
 API就几个，非常容易上手。对小程序代码零破坏零侵入性，新老项目都可随时使用。
@@ -202,11 +202,10 @@ store.update()
 * 状态逻辑在独立的js上，方便实现逻辑复用，且更易于代码测试，对使用函数式编程非常友好。
 
 
-以上是个人见解，在使用过程中有什么问题或建议可以在[Issues](https://github.com/linjc/mini-stores/issues)进行反馈，或钉钉联系：linjinchun
+以上是个人见解，在使用过程中有什么问题或建议可以在**Issues**进行反馈，或钉钉联系：linjinchun
 
 ## 快捷链接
 
 - [Example示例](./examples)
 - [Github仓库](https://github.com/linjc/mini-stores)
 - [Gitee仓库](https://gitee.com/l2j2c3/mini-stores)
-- [Issues反馈](https://github.com/linjc/mini-stores/issues)

@@ -1,6 +1,6 @@
 {
   "name": "mini-stores",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "小程序多状态管理 - 解决跨页面跨组件间通信，简洁小巧高性能，支持微信、支付宝、钉钉、百度、字节、QQ等小程序",
   "main": "dist/index.js",
   "module": "dist/index.js",
