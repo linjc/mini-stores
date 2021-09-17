@@ -13,7 +13,7 @@
 - [快捷链接](#快捷链接)
 
 ## 前言
-公司好几款产品使用钉钉小程序开发，和其他平台小程序一样，没有官方实现的状态管理库，用过redux、vuex、mobx等状态管理库的前端小伙伴都知道，状态管理能很轻松帮我们解决很多跨页面跨组件通信问题。一开始写了一个[Emitter](./src/emitter.js)类，用事件监听方式去实现全局状态管理，但这种方式相对繁琐且不够直观。于是网上寻找有没有更好的解决方案，最终找到了[westore](https://github.com/Tencent/westore)库，这是由腾讯开源团队研发的微信小程序解决方案，其中针对状态管理的实现很不错，而且还使用专门为小程序开发的[JSON Diff 库](https://github.com/dntzhang/westore/blob/master/packages/westore/utils/diff.js)保证每次以最小的数据量更新状态，比原生setData的性能更好。但由于各平台小程序框架API存在一些差异，还需要改动一下才可以使用，于是在看了源码之后，基于其核心原理重写了一版，并去除了一些其他功能，只保留状态管理部分，总代码量从500行精简到了200行，另外根据自身理解做了如下改进：
+公司好几款产品使用钉钉小程序开发，和其他平台小程序一样，都没有官方实现的状态管理库，用过redux、vuex、mobx等状态管理库的前端小伙伴都知道，状态管理能很轻松帮我们解决很多跨页面跨组件通信问题。一开始写了一个[Emitter](./src/emitter.js)，用事件监听方式去实现全局状态管理，但这种方式相对繁琐且不够直观。于是网上寻找有没有更好的解决方案，最终找到了[westore](https://github.com/Tencent/westore)库，这是由腾讯开源团队研发的微信小程序解决方案，其中针对状态管理的实现很不错，而且还使用专门为小程序开发的[JSON Diff 库](https://github.com/Tencent/westore/blob/v1/utils/diff.js)保证每次以最小的数据量更新状态，比原生setData的性能更好。但由于各平台小程序框架API存在一些差异，还需要改动一下才可以使用，于是在看了源码之后，基于其核心原理重写了一版，并去除了一些其他功能，只保留状态管理部分，总代码量从500行精简到了200行，另外根据自身理解做了如下改进：
 
 ### 1、优化渲染效率
 每次更新store状态的时候，只对当前页面进行渲染，其他后台态页面只在再次显示的时候进行更新。这样可以大大减少同时setData的频次，提高渲染效率。
@@ -45,8 +45,6 @@ API就几个，非常容易上手。对小程序代码零破坏零侵入性，�
 * **create.setUpdateName(name)** 自定义更新状态的函数名，默认值update
 * **this.update()** 更新状态触发渲染，在页面、组件、store内使用
 * **store.update()** 其他js文件中使用，需要引入相应的store
-
-注：更新状态的函数update(可使用setUpdateName自定义)，会自动注入到store和使用store的页面、组件对象上，所以在store、页面、组件对象上不要定义同名属性，避免覆盖
 
 ## 使用
 
@@ -92,6 +90,7 @@ export default new Store()
 #### 创建页面
 
 使用create.Page(stores, option)创建页面。其中stores是一个对象，用来关联对应的store，以及定义该store在视图上使用的key名。
+
 注意：该key在视图上使用时，并不是对应store，而是store.data值。另外定义key名注意不要和现有的私有变量同名，个人建议可以加个前缀（如$），这样可以一眼区分它来自全局状态。
 
 ``` js
@@ -167,6 +166,8 @@ create.Component(stores, {
 
 直接更改对应store.data内的值，最后调用this.upadte()即可（update名称可自定义，默认值update）。
 
+
+注：更新状态的函数update(可使用setUpdateName自定义)，会自动注入到store和使用store的页面、组件对象上，所以在store、页面、组件对象上不要定义同名属性，避免覆盖
 ``` js
 // 可在入口app.js自定义用于更新状态的函数名称，默认为update
 import create from 'mini-stores'

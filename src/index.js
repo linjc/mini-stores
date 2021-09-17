@@ -70,7 +70,7 @@ function createComponent(stores, option) {
       const route = this.$page.route
       instances[route] = instances[route] || []
       Object.keys(stores).forEach(key => instances[route].push({ key, vm: this, store: stores[key] }))
-      this[updateName] = _route => updateState(_route, route)
+      this[updateName] = _route => updateState(_route || route)
       this[updateName](route)
       if (onReady) {
         onReady.call(this, query)
@@ -147,7 +147,7 @@ function getNowPage() {
 }
 
 function updateState(route) {
-  const vms = instances[route || getNowPage().route] || []
+  const vms = instances[route] || instances[getNowPage().route] || []
   return Promise.all(vms.map(f => setState(f.vm, { [f.key]: f.store.data })))
 }
 
