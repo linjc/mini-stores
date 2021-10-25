@@ -1,5 +1,9 @@
 # mini-stores - 小程序多状态管理
 
+- [mini-smooth-signature](https://github.com/linjc/mini-smooth-signature) 小程序带笔锋手写签名，支持多平台小程序使用
+
+---
+
 - [前言](#前言)
 - [安装](#安装)
 - [API](#api)
