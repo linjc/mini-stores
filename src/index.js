@@ -222,7 +222,55 @@ function stateDiff(state, preState, path, newState) {
   addDiffState(newState, path, state)
 }
 
+class Store {
+  constructor() {
+    this.__vms = [];
+    setTimeout(() => {
+      this._setComputed()
+    }, 0)
+  }
+
+  _setComputed() {
+    if (!this.__isReadyComputed) {
+      setComputed(this.data, this.data);
+      this.__isReadyComputed = true;
+    }
+  }
+
+  _refreshVms() {
+    const vms = getCurrentPages();
+    this.__vms = this.__vms.filter(f => {
+      return vms.includes(f.vm);
+    })
+  }
+
+  bind(vm, key) {
+    if (!key) {
+      console.error(`请设置store在当前组件实例data中的key，如store.bind(this, '$store')`);
+      return;
+    }
+    vm.data[key] = null;
+    this._setComputed();
+    this._refreshVms();
+    this.__vms.push({ vm, key });
+    setState(vm, { [key]: this.data });
+  }
+
+  update(onlyActiveRoute) {
+    this._refreshVms();
+    this.__vms.forEach(f => {
+      if (onlyActiveRoute) {
+        const nowRoute = getNowPage().route;
+        const vmRoute = f.vm.route || f.vm.__route__ || f.vm.$page && f.vm.$page.route;
+        if (nowRoute && nowRoute !== vmRoute) return;
+      }
+      setState(f.vm, { [f.key]: this.data })
+    })
+  }
+}
+
 module.exports = {
+  Store,
   Page: createPage,
   Component: createComponent,
   setUpdateName: setUpdateName,
