@@ -224,7 +224,6 @@ function stateDiff(state, preState, path, newState) {
 
 class Store {
   constructor() {
-    this.__vms = [];
     setTimeout(() => {
       this._setComputed()
     }, 0)
@@ -238,9 +237,18 @@ class Store {
   }
 
   _refreshVms() {
-    const vms = getCurrentPages();
+    const routes = []
+    const pageIds = []
+    getCurrentPages().forEach(f => {
+      const route = f.route || f.__route__;
+      const pageId = f.getPageId && f.getPageId();
+      route && routes.push(route);
+      pageId && pageIds.push(pageId);
+    });
     this.__vms = this.__vms.filter(f => {
-      return vms.includes(f.vm);
+      const route = f.vm.route || f.vm.__route__ || (f.vm.$page && f.vm.$page.route);
+      const pageId = f.vm.getPageId && f.vm.getPageId();
+      return route && routes.includes(route) || pageId && pageIds.includes(pageId);
     })
   }
 
@@ -250,22 +258,33 @@ class Store {
       return;
     }
     vm.data[key] = null;
+    this.__vms = this.__vms || [];
     this._setComputed();
     this._refreshVms();
     this.__vms.push({ vm, key });
     setState(vm, { [key]: this.data });
   }
 
-  update(onlyActiveRoute) {
+  update() {
     this._refreshVms();
+    const nowPage = getNowPage();
+    const nowRoute = nowPage.route || nowPage.__route__;
+    const nowPageId = nowPage.getPageId && nowPage.getPageId();
+    const delayVms = []
     this.__vms.forEach(f => {
-      if (onlyActiveRoute) {
-        const nowRoute = getNowPage().route;
-        const vmRoute = f.vm.route || f.vm.__route__ || f.vm.$page && f.vm.$page.route;
-        if (nowRoute && nowRoute !== vmRoute) return;
+      const vmRoute = f.vm.route || f.vm.__route__ || (f.vm.$page && f.vm.$page.route);
+      const vmPageId = f.vm.getPageId && f.vm.getPageId();
+      if (nowRoute && vmRoute && nowRoute !== vmRoute || (!vmRoute && nowPageId && vmPageId && nowPageId !== vmPageId)) {
+        delayVms.push(f);
+        return;
       }
-      setState(f.vm, { [f.key]: this.data })
+      setState(f.vm, { [f.key]: this.data });
     })
+    if (!delayVms.length) return;
+    clearTimeout(this.__delayTimer);
+    this.__delayTimer = setTimeout(() => {
+      delayVms.forEach(f => setState(f.vm, { [f.key]: this.data }))
+    }, 360)
   }
 }
 
