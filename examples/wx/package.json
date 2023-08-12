@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "mini-stores": "^1.0.0"
+    "mini-stores": "^1.1.1"
   }
 }

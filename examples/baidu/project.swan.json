@@ -6,8 +6,15 @@
     },
     "swan": {
         "baiduboxapp": {
-            "extensionJsVersion": "1.21.2",
-            "swanJsVersion": "3.350.6"
+            "swanJsVersion": "3.760.3",
+            "extensionJsVersion": "1.21.2"
         }
+    },
+    "appid": "17767960",
+    "compilation-args": {
+        "common": {
+            "quickPreview": true
+        },
+        "forceChanged": {}
     }
 }

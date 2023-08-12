@@ -1,6 +1,7 @@
 // 全局store
+import create from 'mini-stores'
 
-class Store {
+class Store extends create.Store {
 
   data = {
     language: "zh_cn",

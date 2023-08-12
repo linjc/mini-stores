@@ -1,23 +1,20 @@
-const create = require('mini-stores')
 const helloStore = require('../../stores/helloStore')
 const globalStore = require('../../stores/globalStore')
 
-const stores = {
-  '$hello': helloStore,
-  '$data': globalStore
-}
-
-create.Page(stores, {
+Page({
 
   data: {},
 
-  onLoad() { },
+  onLoad() {
+    helloStore.bind(this, '$hello');
+    globalStore.bind(this, '$data');
+  },
   
   handleChangeTitle() {
     helloStore.onChangeTitle()
   },
 
   goBack() {
-    wx.navigateBack()
+    jd.navigateBack()
   }
 });

@@ -1,5 +1,6 @@
+import create from 'mini-stores'
 
-class Store {
+class Store extends create.Store {
 
   data = {
     title: '首页',

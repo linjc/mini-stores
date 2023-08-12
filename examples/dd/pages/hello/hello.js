@@ -1,17 +1,14 @@
-import create from 'mini-stores'
 import helloStore from '/stores/helloStore'
 import globalStore from '/stores/globalStore'
 
-const stores = {
-  '$hello': helloStore,
-  '$data': globalStore
-}
-
-create.Page(stores, {
+Page({
 
   data: {},
 
-  onLoad() { },
+  onLoad() {
+    helloStore.bind(this, '$hello');
+    globalStore.bind(this, '$data');
+  },
   
   handleChangeTitle() {
     helloStore.onChangeTitle()

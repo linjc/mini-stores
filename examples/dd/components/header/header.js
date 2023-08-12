@@ -1,15 +1,13 @@
-import create from 'mini-stores'
 import helloStore from '/stores/helloStore'
 import indexStore from '/stores/indexStore'
 import globalStore from '/stores/globalStore'
 
-const stores = {
-  '$hello': helloStore,
-  '$index': indexStore,
-  '$data': globalStore
-}
-
-create.Component(stores, {
+Component({
+  didMount() {
+    helloStore.bind(this, '$hello');
+    indexStore.bind(this, '$index');
+    globalStore.bind(this, '$data');
+  },
   methods: {
     handleChangeLang() {
       globalStore.onChangeLang()

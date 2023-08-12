@@ -1,15 +1,17 @@
-const create = require('mini-stores')
 const helloStore = require('../../stores/helloStore')
 const indexStore = require('../../stores/indexStore')
 const globalStore = require('../../stores/globalStore')
 
-const stores = {
-  '$hello': helloStore,
-  '$index': indexStore,
-  '$data': globalStore
-}
+Component({
+  
+  lifetimes: {
+    ready() {
+      helloStore.bind(this, '$hello');
+      indexStore.bind(this, '$index');
+      globalStore.bind(this, '$data');
+    }
+  },
 
-create.Component(stores, {
   methods: {
     handleChangeLang() {
       globalStore.onChangeLang()

@@ -1,19 +1,16 @@
-const create = require('../../node_modules/mini-stores/dist')
 const helloStore = require('../../stores/helloStore')
 const globalStore = require('../../stores/globalStore')
 
-const stores = {
-  '$hello': helloStore,
-  '$data': globalStore
-}
-
-create.Page(stores, {
+Page({
 
   data: {
     privateData: '私有状态'
   },
 
-  onLoad() {},
+  onLoad() {
+    helloStore.bind(this, '$hello');
+    globalStore.bind(this, '$data');
+  },
 
   handleChangeTitle() {
     helloStore.onChangeTitle()

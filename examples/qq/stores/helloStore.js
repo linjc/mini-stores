@@ -1,5 +1,6 @@
+const create = require('mini-stores')
 
-class Store {
+class Store extends create.Store {
 
   data = {
     title: 'Hello页',
