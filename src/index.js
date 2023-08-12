@@ -222,6 +222,14 @@ function stateDiff(state, preState, path, newState) {
   addDiffState(newState, path, state)
 }
 
+function getPageKey(vm) {
+  if (vm.__webviewId__ !== undefined) return vm.__webviewId__;
+  if (vm.__wxWebviewId__ !== undefined) return vm.__wxWebviewId__;
+  if (vm.getPageId) return vm.getPageId();
+  const $page = vm.$page || vm.pageinstance || {};
+  return vm.route || vm.__route__ || $page.route || $page.__route__;
+}
+
 class Store {
   constructor() {
     setTimeout(() => {
@@ -237,18 +245,14 @@ class Store {
   }
 
   _refreshVms() {
-    const routes = []
-    const pageIds = []
+    const pageKeys = []
     getCurrentPages().forEach(f => {
-      const route = f.route || f.__route__;
-      const pageId = f.getPageId && f.getPageId();
-      route && routes.push(route);
-      pageId && pageIds.push(pageId);
+      const pageKey = getPageKey(f);
+      pageKey && pageKeys.push(pageKey);
     });
     this.__vms = this.__vms.filter(f => {
-      const route = f.vm.route || f.vm.__route__ || (f.vm.$page && f.vm.$page.route);
-      const pageId = f.vm.getPageId && f.vm.getPageId();
-      return route && routes.includes(route) || pageId && pageIds.includes(pageId);
+      const pageKey = getPageKey(f.vm);
+      return pageKey && pageKeys.includes(pageKey);
     })
   }
 
@@ -257,6 +261,7 @@ class Store {
       console.error(`请设置store在当前组件实例data中的key，如store.bind(this, '$store')`);
       return;
     }
+    vm.data = vm.data || {}
     vm.data[key] = null;
     this.__vms = this.__vms || [];
     this._setComputed();
@@ -268,13 +273,11 @@ class Store {
   update() {
     this._refreshVms();
     const nowPage = getNowPage();
-    const nowRoute = nowPage.route || nowPage.__route__;
-    const nowPageId = nowPage.getPageId && nowPage.getPageId();
+    const nowPageKey = getPageKey(nowPage);
     const delayVms = []
     this.__vms.forEach(f => {
-      const vmRoute = f.vm.route || f.vm.__route__ || (f.vm.$page && f.vm.$page.route);
-      const vmPageId = f.vm.getPageId && f.vm.getPageId();
-      if (nowRoute && vmRoute && nowRoute !== vmRoute || (!vmRoute && nowPageId && vmPageId && nowPageId !== vmPageId)) {
+      const vmPageKey = getPageKey(f.vm);
+      if (nowPageKey && vmPageKey && nowPageKey !== vmPageKey) {
         delayVms.push(f);
         return;
       }
