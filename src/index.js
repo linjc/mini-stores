@@ -34,9 +34,10 @@ function createPage(stores, option) {
 
   const onLoad = option.onLoad
   option.onLoad = function (query) {
-    instances[this.route] = instances[this.route] || []
-    Object.keys(stores).forEach(key => instances[this.route].push({ key, vm: this, store: stores[key] }))
-    this[updateName] = _route => updateState(_route || this.route)
+    const pageKey = getPageKey(this);
+    instances[pageKey] = instances[pageKey] || []
+    Object.keys(stores).forEach(key => instances[pageKey].push({ key, vm: this, store: stores[key] }))
+    this[updateName] = () => updateState(pageKey)
     onLoad && onLoad.call(this, query)
   }
 
@@ -49,7 +50,8 @@ function createPage(stores, option) {
   const onUnload = option.onUnload
   option.onUnload = function (query) {
     onUnload && onUnload.call(this, query)
-    instances[this.route].length = 0
+    const pageKey = getPageKey(this);
+    instances[pageKey].length = 0
   }
 
   __Page(option)
@@ -67,11 +69,11 @@ function createComponent(stores, option) {
     const onReady = config[key]
     config[key] = function (query) {
       this.$page = this.$page || getNowPage()
-      const route = this.$page.route
-      instances[route] = instances[route] || []
-      Object.keys(stores).forEach(key => instances[route].push({ key, vm: this, store: stores[key] }))
-      this[updateName] = _route => updateState(_route || route)
-      this[updateName](route)
+      const pageKey = getPageKey(this);
+      instances[pageKey] = instances[pageKey] || []
+      Object.keys(stores).forEach(key => instances[pageKey].push({ key, vm: this, store: stores[key] }))
+      this[updateName] = () => updateState(pageKey)
+      this[updateName](pageKey)
       if (onReady) {
         onReady.call(this, query)
       } else if (onOldReady) {
@@ -83,13 +85,13 @@ function createComponent(stores, option) {
   function initDestroy(config, key, onOldDestroy) {
     const onDestroy = config[key]
     config[key] = function (query) {
-      const route = this.$page.route
+      const pageKey = getPageKey(this);
       if (onDestroy) {
         onDestroy.call(this, query)
       } else if (onOldDestroy) {
         onOldDestroy.call(this, query)
       }
-      instances[route] = instances[route].filter(f => f.vm !== this)
+      instances[pageKey] = instances[pageKey].filter(f => f.vm !== this)
     }
   }
 
@@ -143,11 +145,11 @@ function deepCopy(data) {
 
 function getNowPage() {
   const pages = getCurrentPages()
-  return pages[pages.length - 1] || {}
+  return pages[pages.length - 1]
 }
 
-function updateState(route) {
-  const vms = instances[route] || instances[getNowPage().route] || []
+function updateState(pageKey) {
+  const vms = instances[pageKey] || instances[getPageKey(getNowPage())] || []
   return Promise.all(vms.map(f => setState(f.vm, { [f.key]: f.store.data })))
 }
 
@@ -226,8 +228,17 @@ function getPageKey(vm) {
   if (vm.__webviewId__ !== undefined) return vm.__webviewId__;
   if (vm.__wxWebviewId__ !== undefined) return vm.__wxWebviewId__;
   if (vm.getPageId) return vm.getPageId();
-  const $page = vm.$page || vm.pageinstance || {};
-  return vm.route || vm.__route__ || $page.route || $page.__route__;
+  const $page = vm.$page || vm.pageinstance;
+  if ($page) {
+    const $pageKey = getPageKey($page);
+    if ($pageKey !== undefined) {
+      return $pageKey;
+    }
+    if ($page.route) {
+      return $page.route;
+    }
+  }
+  return vm.route;
 }
 
 class Store {
@@ -239,21 +250,14 @@ class Store {
 
   _setComputed() {
     if (!this.__isReadyComputed) {
-      setComputed(this.data, this.data);
       this.__isReadyComputed = true;
+      setComputed(this.data, this.data);
     }
   }
 
   _refreshVms() {
-    const pageKeys = []
-    getCurrentPages().forEach(f => {
-      const pageKey = getPageKey(f);
-      pageKey && pageKeys.push(pageKey);
-    });
-    this.__vms = this.__vms.filter(f => {
-      const pageKey = getPageKey(f.vm);
-      return pageKey && pageKeys.includes(pageKey);
-    })
+    const pageKeys = getCurrentPages().map(f => getPageKey(f));
+    this.__vms = this.__vms.filter(f => pageKeys.includes(getPageKey(f.vm)))
   }
 
   bind(vm, key) {
@@ -270,18 +274,24 @@ class Store {
     setState(vm, { [key]: this.data });
   }
 
+  unbind(vm) {
+    this.__vms = this.__vms.filter(f => f.vm !== vm);
+  }
+
   update() {
-    this._refreshVms();
-    const nowPage = getNowPage();
-    const nowPageKey = getPageKey(nowPage);
-    const delayVms = []
-    this.__vms.forEach(f => {
-      const vmPageKey = getPageKey(f.vm);
-      if (nowPageKey && vmPageKey && nowPageKey !== vmPageKey) {
-        delayVms.push(f);
-        return;
+    const pageKeys = getCurrentPages().map(f => getPageKey(f));
+    const nowPageKey = pageKeys[pageKeys.length - 1];
+    const delayVms = [];
+    this.__vms = this.__vms.filter(f => {
+      const pageKey = getPageKey(f.vm);
+      if (pageKeys.includes(pageKey)) {
+        if (nowPageKey === pageKey) {
+          setState(f.vm, { [f.key]: this.data });
+        } else { // 延迟更新
+          delayVms.push(f);
+        }
+        return true;
       }
-      setState(f.vm, { [f.key]: this.data });
     })
     if (!delayVms.length) return;
     clearTimeout(this.__delayTimer);
