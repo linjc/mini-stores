@@ -224,21 +224,22 @@ function stateDiff(state, preState, path, newState) {
   addDiffState(newState, path, state)
 }
 
-function getPageKey(vm) {
+function getPageKey(vm, isSub) {
   if (vm.__webviewId__ !== undefined) return vm.__webviewId__;
   if (vm.__wxWebviewId__ !== undefined) return vm.__wxWebviewId__;
   if (vm.getPageId) return vm.getPageId();
-  const $page = vm.$page || vm.pageinstance;
+  const $page = !isSub && (vm.$page || vm.pageinstance);
   if ($page) {
-    const $pageKey = getPageKey($page);
+    const $pageKey = getPageKey($page, true);
     if ($pageKey !== undefined) {
       return $pageKey;
     }
-    if ($page.route) {
-      return $page.route;
-    }
   }
   return vm.route;
+}
+
+function getPageKeys() {
+  return getCurrentPages().map(f => getPageKey(f));
 }
 
 class Store {
@@ -256,7 +257,7 @@ class Store {
   }
 
   _refreshVms() {
-    const pageKeys = getCurrentPages().map(f => getPageKey(f));
+    const pageKeys = getPageKeys();
     this.__vms = this.__vms.filter(f => pageKeys.includes(getPageKey(f.vm)))
   }
 
@@ -279,7 +280,7 @@ class Store {
   }
 
   update() {
-    const pageKeys = getCurrentPages().map(f => getPageKey(f));
+    const pageKeys = getPageKeys();
     const nowPageKey = pageKeys[pageKeys.length - 1];
     const delayVms = [];
     this.__vms = this.__vms.filter(f => {
