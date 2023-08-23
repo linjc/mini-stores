@@ -1,9 +1,5 @@
 # mini-stores - 小程序多状态管理
 
-- [mini-smooth-signature](https://github.com/linjc/mini-smooth-signature) 小程序带笔锋手写签名，支持多平台小程序使用
-
----
-
 - [前言](#前言)
 - [安装](#安装)
 - [使用](#使用)
@@ -89,10 +85,10 @@ import indexStore from '/stores/indexStore'
 
 Page({
   data: {
-    privateData: '私有状态'
+    privateData: '私有状态' // 私有状态还是通过原有的setData更新
   },
   onLoad() {
-    // 绑定实例到store上，第二参数随意命名，但注意不要和页面data内的私有变量同名
+    // 绑定实例到store上，第二参数定义视图上使用的key名，命名随意，但注意不要和页面data内的私有变量同名
     indexStore.bind(this, '$index');
     globalStore.bind(this, '$data');
   },
