@@ -34,10 +34,10 @@ function createPage(stores, option) {
 
   const onLoad = option.onLoad
   option.onLoad = function (query) {
-    const pageKey = getPageKey(this);
-    instances[pageKey] = instances[pageKey] || []
-    Object.keys(stores).forEach(key => instances[pageKey].push({ key, vm: this, store: stores[key] }))
-    this[updateName] = () => updateState(pageKey)
+    const vmRoute = getVmRoute(this);
+    instances[vmRoute] = instances[vmRoute] || []
+    Object.keys(stores).forEach(key => instances[vmRoute].push({ key, vm: this, store: stores[key] }))
+    this[updateName] = () => updateState(vmRoute)
     onLoad && onLoad.call(this, query)
   }
 
@@ -50,8 +50,8 @@ function createPage(stores, option) {
   const onUnload = option.onUnload
   option.onUnload = function (query) {
     onUnload && onUnload.call(this, query)
-    const pageKey = getPageKey(this);
-    instances[pageKey].length = 0
+    const vmRoute = getVmRoute(this);
+    instances[vmRoute].length = 0
   }
 
   __Page(option)
@@ -68,12 +68,12 @@ function createComponent(stores, option) {
   function initReady(config, key, onOldReady) {
     const onReady = config[key]
     config[key] = function (query) {
-      this.$page = this.$page || getNowPage()
-      const pageKey = getPageKey(this);
-      instances[pageKey] = instances[pageKey] || []
-      Object.keys(stores).forEach(key => instances[pageKey].push({ key, vm: this, store: stores[key] }))
-      this[updateName] = () => updateState(pageKey)
-      this[updateName](pageKey)
+      this.$page = this.$page || this.pageinstance || getNowPage()
+      const vmRoute = getVmRoute(this);
+      instances[vmRoute] = instances[vmRoute] || []
+      Object.keys(stores).forEach(key => instances[vmRoute].push({ key, vm: this, store: stores[key] }))
+      this[updateName] = () => updateState(vmRoute)
+      this[updateName](vmRoute)
       if (onReady) {
         onReady.call(this, query)
       } else if (onOldReady) {
@@ -85,13 +85,13 @@ function createComponent(stores, option) {
   function initDestroy(config, key, onOldDestroy) {
     const onDestroy = config[key]
     config[key] = function (query) {
-      const pageKey = getPageKey(this);
+      const vmRoute = getVmRoute(this);
       if (onDestroy) {
         onDestroy.call(this, query)
       } else if (onOldDestroy) {
         onOldDestroy.call(this, query)
       }
-      instances[pageKey] = instances[pageKey].filter(f => f.vm !== this)
+      instances[vmRoute] = instances[vmRoute].filter(f => f.vm !== this)
     }
   }
 
@@ -148,8 +148,8 @@ function getNowPage() {
   return pages[pages.length - 1]
 }
 
-function updateState(pageKey) {
-  const vms = instances[pageKey] || instances[getPageKey(getNowPage())] || []
+function updateState(vmRoute) {
+  const vms = instances[vmRoute] || instances[getVmRoute(getNowPage())] || []
   return Promise.all(vms.map(f => setState(f.vm, { [f.key]: f.store.data })))
 }
 
@@ -224,22 +224,18 @@ function stateDiff(state, preState, path, newState) {
   addDiffState(newState, path, state)
 }
 
-function getPageKey(vm, isSub) {
-  if (vm.__webviewId__ !== undefined) return vm.__webviewId__;
-  if (vm.__wxWebviewId__ !== undefined) return vm.__wxWebviewId__;
-  if (vm.getPageId) return vm.getPageId();
-  const $page = !isSub && (vm.$page || vm.pageinstance);
-  if ($page) {
-    const $pageKey = getPageKey($page, true);
-    if ($pageKey !== undefined) {
-      return $pageKey;
-    }
-  }
+function getVmRoute(vm) {
   return vm.route;
 }
 
-function getPageKeys() {
-  return getCurrentPages().map(f => getPageKey(f));
+function getCurrentRoutes() {
+  return getCurrentPages().map(f => getVmRoute(f));
+}
+
+function initComponent(vm) {
+  if (vm.route) return;
+  const pageVm = vm.$page || vm.pageinstance || getNowPage() || {};
+  vm.route = pageVm.route;
 }
 
 class Store {
@@ -256,11 +252,6 @@ class Store {
     }
   }
 
-  _refreshVms() {
-    const pageKeys = getPageKeys();
-    this.__vms = this.__vms.filter(f => pageKeys.includes(getPageKey(f.vm)))
-  }
-
   bind(vm, key) {
     if (!key) {
       console.error(`请设置store在当前组件实例data中的key，如store.bind(this, '$store')`);
@@ -270,9 +261,9 @@ class Store {
     vm.data[key] = null;
     this.__vms = this.__vms || [];
     this._setComputed();
-    this._refreshVms();
     this.__vms.push({ vm, key });
     setState(vm, { [key]: this.data });
+    setTimeout(() => initComponent(vm), 360);
   }
 
   unbind(vm) {
@@ -280,13 +271,13 @@ class Store {
   }
 
   update() {
-    const pageKeys = getPageKeys();
-    const nowPageKey = pageKeys[pageKeys.length - 1];
+    const currRoutes = getCurrentRoutes();
+    const nowVmRoute = currRoutes[currRoutes.length - 1];
     const delayVms = [];
     this.__vms = this.__vms.filter(f => {
-      const pageKey = getPageKey(f.vm);
-      if (pageKeys.includes(pageKey)) {
-        if (nowPageKey === pageKey) {
+      const vmRoute = getVmRoute(f.vm);
+      if (currRoutes.includes(vmRoute)) {
+        if (nowVmRoute === vmRoute) {
           setState(f.vm, { [f.key]: this.data });
         } else { // 延迟更新
           delayVms.push(f);
