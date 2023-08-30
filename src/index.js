@@ -267,14 +267,14 @@ class Store {
   }
 
   unbind(vm) {
-    this.__vms = this.__vms.filter(f => f.vm !== vm);
+    this.__vms = (this.__vms || []).filter(f => f.vm !== vm);
   }
 
   update() {
     const currRoutes = getCurrentRoutes();
     const nowVmRoute = currRoutes[currRoutes.length - 1];
     const delayVms = [];
-    this.__vms = this.__vms.filter(f => {
+    this.__vms = (this.__vms || []).filter(f => {
       const vmRoute = getVmRoute(f.vm);
       if (currRoutes.includes(vmRoute)) {
         if (nowVmRoute === vmRoute) {
