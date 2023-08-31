@@ -240,6 +240,7 @@ function initComponent(vm) {
 
 class Store {
   constructor() {
+    this.__vms = [];
     setTimeout(() => {
       this._setComputed()
     }, 0)
