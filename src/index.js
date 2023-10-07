@@ -1,111 +1,6 @@
 const TYPE_ARRAY = '[object Array]'
 const TYPE_OBJECT = '[object Object]'
 const TYPE_FUNCTION = '[object Function]'
-const __Page = Page
-const __Component = Component
-const instances = {}
-let updateName = 'update'
-
-function setUpdateName(name) {
-  updateName = name || updateName
-}
-
-function initStores(stores, option) {
-  option.data = option.data || {}
-  Object.keys(stores || {}).forEach(key => {
-    const store = stores[key]
-    store.data = store.data || {}
-    store[updateName] = updateState
-    if (!store.__isReadyComputed) {
-      setComputed(store.data, store.data)
-      store.__isReadyComputed = true
-    }
-    option.data[key] = deepCopy(store.data)
-  })
-}
-
-function createPage(stores, option) {
-  if (!option) {
-    console.error('createPage参数有误')
-    option = stores || {}
-    stores = {}
-  }
-  initStores(stores, option)
-
-  const onLoad = option.onLoad
-  option.onLoad = function (query) {
-    const vmRoute = getVmRoute(this);
-    instances[vmRoute] = instances[vmRoute] || []
-    Object.keys(stores).forEach(key => instances[vmRoute].push({ key, vm: this, store: stores[key] }))
-    this[updateName] = () => updateState(vmRoute)
-    onLoad && onLoad.call(this, query)
-  }
-
-  const onShow = option.onShow
-  option.onShow = function (query) {
-    this[updateName]()
-    onShow && onShow.call(this, query)
-  }
-
-  const onUnload = option.onUnload
-  option.onUnload = function (query) {
-    onUnload && onUnload.call(this, query)
-    const vmRoute = getVmRoute(this);
-    instances[vmRoute].length = 0
-  }
-
-  __Page(option)
-}
-
-function createComponent(stores, option) {
-  if (!option) {
-    console.error('createComponent参数有误')
-    option = stores || {}
-    stores = {}
-  }
-  initStores(stores, option)
-
-  function initReady(config, key, onOldReady) {
-    const onReady = config[key]
-    config[key] = function (query) {
-      this.$page = this.$page || this.pageinstance || getNowPage()
-      const vmRoute = getVmRoute(this);
-      instances[vmRoute] = instances[vmRoute] || []
-      Object.keys(stores).forEach(key => instances[vmRoute].push({ key, vm: this, store: stores[key] }))
-      this[updateName] = () => updateState(vmRoute)
-      this[updateName](vmRoute)
-      if (onReady) {
-        onReady.call(this, query)
-      } else if (onOldReady) {
-        onOldReady.call(this, query)
-      }
-    }
-  }
-
-  function initDestroy(config, key, onOldDestroy) {
-    const onDestroy = config[key]
-    config[key] = function (query) {
-      const vmRoute = getVmRoute(this);
-      if (onDestroy) {
-        onDestroy.call(this, query)
-      } else if (onOldDestroy) {
-        onOldDestroy.call(this, query)
-      }
-      instances[vmRoute] = instances[vmRoute].filter(f => f.vm !== this)
-    }
-  }
-
-  // 钉钉/支付宝等阿里系小程序
-  initReady(option, 'didMount')
-  initDestroy(option, 'didUnmount')
-
-  // 微信/京东/百度/字节/QQ等小程序
-  option.lifetimes = option.lifetimes || {}
-  initReady(option.lifetimes, 'ready', option.ready)
-  initDestroy(option.lifetimes, 'detached', option.detached)
-
-  __Component(option)
-}
 
 function setComputed(storeData, value, obj, key) {
   const type = getType(value)
@@ -146,11 +41,6 @@ function deepCopy(data) {
 function getNowPage() {
   const pages = getCurrentPages()
   return pages[pages.length - 1]
-}
-
-function updateState(vmRoute) {
-  const vms = instances[vmRoute] || instances[getVmRoute(getNowPage())] || []
-  return Promise.all(vms.map(f => setState(f.vm, { [f.key]: f.store.data })))
 }
 
 function setState(vm, data) {
@@ -294,9 +184,4 @@ class Store {
   }
 }
 
-module.exports = {
-  Store,
-  Page: createPage,
-  Component: createComponent,
-  setUpdateName: setUpdateName,
-}
+module.exports = { Store }
