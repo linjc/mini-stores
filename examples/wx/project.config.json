@@ -37,11 +37,12 @@
       "disablePlugins": [],
       "outputPath": ""
     },
-    "condition": false
+    "condition": false,
+    "ignoreUploadUnusedFiles": true
   },
   "compileType": "miniprogram",
   "libVersion": "2.17.0",
-  "appid": "touristappid",
+  "appid": "wx84727eb836a04125",
   "projectname": "miniprogram-1",
   "condition": {},
   "editorSetting": {

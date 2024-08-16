@@ -11,6 +11,12 @@ Component({
     globalStore.bind(this, '$data');
   },
 
+  didUnmount() {
+    helloStore.unbind(this)
+    indexStore.unbind(this)
+    globalStore.unbind(this)
+  },
+
   methods: {
     handleChangeLang() {
       globalStore.onChangeLang()

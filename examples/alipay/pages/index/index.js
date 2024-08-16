@@ -12,6 +12,11 @@ Page({
     globalStore.bind(this, '$data');
   },
 
+  onUnload() {
+    helloStore.unbind(this)
+    globalStore.unbind(this)
+  },
+
   handleChangeTitle() {
     indexStore.data.title = '首页' + Math.floor(Math.random() * 1000)
     indexStore.update()

@@ -10,6 +10,11 @@ Page({
     globalStore.bind(this, '$data');
   },
   
+  onUnload() {
+    helloStore.unbind(this)
+    globalStore.unbind(this)
+  },
+
   handleChangeTitle() {
     helloStore.onChangeTitle()
   },

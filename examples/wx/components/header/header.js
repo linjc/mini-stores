@@ -8,7 +8,12 @@ Component({
       helloStore.bind(this, '$hello');
       indexStore.bind(this, '$index');
       globalStore.bind(this, '$data');
-    }
+    },
+    detached() {
+      helloStore.unbind(this)
+      indexStore.unbind(this)
+      globalStore.unbind(this)
+    },
   },
   methods: {
     handleChangeLang() {

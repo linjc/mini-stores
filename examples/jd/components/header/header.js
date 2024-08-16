@@ -10,6 +10,12 @@ Component({
     globalStore.bind(this, '$data');
   },
 
+  detached() {
+    helloStore.unbind(this)
+    indexStore.unbind(this)
+    globalStore.unbind(this)
+  },
+
   methods: {
     handleChangeLang() {
         console.log(this, 1111)

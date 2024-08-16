@@ -9,7 +9,12 @@ Page({
     helloStore.bind(this, '$hello');
     globalStore.bind(this, '$data');
   },
-  
+
+  onUnload() {
+    helloStore.unbind(this)
+    globalStore.unbind(this)
+  },
+
   handleChangeTitle() {
     helloStore.onChangeTitle()
   },
