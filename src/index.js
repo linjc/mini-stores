@@ -1,3 +1,7 @@
+/*
+ * @Author: linjc
+ * @Repository: https://github.com/linjc/mini-stores
+ */
 const TYPE_ARRAY = '[object Array]'
 const TYPE_OBJECT = '[object Object]'
 const TYPE_FUNCTION = '[object Function]'
@@ -122,10 +126,8 @@ function getCurrentRoutes() {
   return getCurrentPages().map(f => getVmRoute(f));
 }
 
-function initComponent(vm) {
-  if (vm.route) return;
-  const pageVm = vm.$page || vm.pageinstance || getNowPage() || {};
-  vm.route = pageVm.route;
+function initRoute(vm) {
+  return vm.route || vm.__route__
 }
 
 class Store {
@@ -154,7 +156,8 @@ class Store {
     this._setComputed();
     this.__vms.push({ vm, key });
     setState(vm, { [key]: this.data });
-    setTimeout(() => initComponent(vm), 360);
+    const rootVm = vm.$page || vm.pageinstance || getNowPage() || {}
+    vm.route = initRoute(vm) || initRoute(rootVm)
   }
 
   unbind(vm) {
