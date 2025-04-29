@@ -152,12 +152,14 @@ class Store {
     }
     vm.data = vm.data || {}
     vm.data[key] = null;
-    this.__vms = this.__vms || [];
     this._setComputed();
-    this.__vms.push({ vm, key });
     setState(vm, { [key]: this.data });
-    const rootVm = vm.$page || vm.pageinstance || getNowPage() || {}
-    vm.route = initRoute(vm) || initRoute(rootVm)
+    this.__vms = this.__vms || [];
+    if (!this.__vms.some(f => f.vm === vm && f.key === key)) {
+      this.__vms.push({ vm, key });
+      const rootVm = vm.$page || vm.pageinstance || getNowPage() || {}
+      vm.route = initRoute(vm) || initRoute(rootVm)
+    }
   }
 
   unbind(vm) {
@@ -168,7 +170,7 @@ class Store {
     const currRoutes = getCurrentRoutes();
     const nowVmRoute = currRoutes[currRoutes.length - 1];
     const delayVms = [];
-    this.__vms = (this.__vms || []).filter(f => {
+    (this.__vms || []).forEach(f => {
       const vmRoute = getVmRoute(f.vm);
       if (currRoutes.includes(vmRoute)) {
         if (nowVmRoute === vmRoute) {
@@ -176,7 +178,6 @@ class Store {
         } else { // 延迟更新
           delayVms.push(f);
         }
-        return true;
       }
     })
     if (!delayVms.length) return;

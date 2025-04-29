@@ -8,6 +8,11 @@ Page({
     helloStore.bind(this, '$hello');
     globalStore.bind(this, '$data');
   },
+
+  onShow() {
+    helloStore.update()
+    globalStore.update()
+  },
   
   onUnload() {
     helloStore.unbind(this)

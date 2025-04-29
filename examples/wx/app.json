@@ -3,6 +3,18 @@
         "pages/index/index",
         "pages/hello/hello"
     ],
+    "tabBar": {
+        "list": [
+            {
+                "pagePath": "pages/index/index",
+                "text": "首页"
+            },
+            {
+                "pagePath": "pages/hello/hello",
+                "text": "Hello"
+            }
+        ]
+    },
     "window": {
         "navigationBarTitleText": "小程序多状态管理"
     },
