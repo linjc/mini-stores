@@ -4,7 +4,7 @@
     "module": "esnext",
     "declaration": true,
     "emitDeclarationOnly": true,
-    "outDir": "./dist/types",
+    "outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
