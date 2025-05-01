@@ -74,9 +74,11 @@ export default new Store()
 
 #### 页面内使用
 
-在页面的初始化周期函数（onLoad）内，使用store.bind方法将页面实例绑定到store上，如store.bind(this, '$data'), 第一个参数this为当前页面实例，第二参数为该store在视图上使用的key名。
+在页面的初始化时（onLoad）绑定store，页面销毁时（onUnload）解除store绑定。
 
-注意：该key在视图上使用时，并不是对应store，而是store.data值。另外定义key名注意不要和现有的私有变量同名，个人建议可以加个前缀（如$），这样可以一眼区分它来自全局状态。
+store.bind方法使用：store.bind(this, '$data'), 第一个参数this为当前页面实例，第二参数为该store在视图上使用的key名。注意该key在视图上使用时，并不是对应store，而是store.data值。另外定义key名注意不要和现有的私有变量同名，个人建议可以加个前缀（如$），这样可以一眼区分它来自全局状态。
+
+另外如果页面是Tabbar页面，需要在show时手动update触发更新，这是由于小程序Tabbar页面切出后不会保留在页面栈中，使得stores无法跟踪更新。
 
 ``` js
 import globalStore from '/stores/globalStore'
@@ -91,6 +93,16 @@ Page({
     indexStore.bind(this, '$index');
     globalStore.bind(this, '$data');
   },
+  // 页面销毁时解除绑定
+  onUnload() {
+    indexStore.unbind(this)
+    globalStore.unbind(this)
+  },
+  // 该页面如果是Tabbar页面，需要在show时手动update触发更新。
+  onShow() {
+    indexStore.update()
+    globalStore.update()
+  },
   handleChangeTitle() {
     globalStore.data.title = '新标题'
     globalStore.update()
@@ -104,7 +116,9 @@ Page({
 
 #### 组件内使用
 
-和页面内使用一样，在组件初始化时进行store绑定。注意下各平台组件生命周期函数写法可能有所区别，根据对应官方文档来写即可。
+和页面内使用一样，在组件初始化时进行store绑定，在组件销毁时解除绑定。另外如果组件在Tabbar页面使用，需要在show时手动写update触发更新，如果只用于其他页面则不需要，当然写了也不影响。
+
+各平台组件生命周期函数写法可能有所区别，根据对应官方文档来写即可。
 
 
 ``` js
@@ -120,12 +134,30 @@ Component({
     indexStore.bind(this, '$index');
     globalStore.bind(this, '$data');
   },
+  didUnmount() {
+    // 组件销毁时解除绑定
+    indexStore.unbind(this)
+    globalStore.unbind(this)
+  },
+
   // 微信小程序等大部分小程序
   lifetimes: {
     ready() {
       indexStore.bind(this, '$index');
       globalStore.bind(this, '$data');
-    }
+    },
+    detached() {
+      // 组件销毁时解除绑定
+      helloStore.unbind(this)
+      globalStore.unbind(this)
+    },
+  },
+  // 组件用于Tabbar页面内，需要在show时手动update触发更新。（如果不用于Tabbar页面可以不写，当然留着也不影响）
+  pageLifetimes: {
+    show() {
+      indexStore.update()
+      globalStore.update()
+    },
   },
   methods: {
     handleChangeTitle() {
