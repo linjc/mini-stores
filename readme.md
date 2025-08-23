@@ -8,6 +8,7 @@
   - [组件内使用](#组件内使用)
   - [视图上使用](#视图上使用)
   - [更新状态](#更新状态)
+  - [监听状态](#监听状态)
 - [使用建议](#使用建议)
 - [快捷链接](#快捷链接)
 
@@ -189,10 +190,13 @@ Component({
 
 注：store对象上不要重新定义update属性，避免覆盖
 
-#### 监听状态变更（watch）
+#### 监听状态
 
 添加监听：store.watch.on('key', fn)
+
 移除监听：store.watch.off('key', fn)
+
+key支持简单的对象点路径写法，从而实现监听深层字段，如：'a.b.c.d'
 
 ``` js
 import globalStore from '/stores/globalStore'
