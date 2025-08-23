@@ -10,6 +10,7 @@ Page({
   onLoad() {
     indexStore.bind(this, '$index');
     globalStore.bind(this, '$data');
+    globalStore.watch.on('language', this.onWatchLang)
   },
 
   onShow() {
@@ -20,6 +21,11 @@ Page({
   onUnload() {
     indexStore.unbind(this)
     globalStore.unbind(this)
+    globalStore.watch.off('language', this.onWatchLang)
+  },
+
+  onWatchLang(value, oldValue) {
+    console.log('language change:', value, oldValue)
   },
   
   handleChangeTitle() {

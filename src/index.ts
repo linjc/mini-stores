@@ -145,11 +145,56 @@ interface BoundVM {
     key: string;
 }
 
+type WatchCallback = (value: any, oldValue: any) => void
+interface WatchItem {
+    value: any,
+    paths: string[],
+    callbacks: {
+        vm?: any,
+        callback: WatchCallback,
+    }[]
+}
+
+function getValueByPaths(data: any, paths: string[]) {
+    let value = data
+    paths.forEach(key => {
+        value = value?.[key]
+    })
+    return value
+}
+
 export class Store {
     private __vms: BoundVM[] = [];
     private __delayTimer: ReturnType<typeof setTimeout> | null = null;
     private __isReadyComputed: boolean = false;
+    private __watchTimer: any = null;
+    private __watchCallbacks: Record<string, WatchItem> = {}
     public data: PlainObject = {};
+
+    public watch = {
+        on: (key: string, callback: WatchCallback, vm?: any) => {
+            if (!key || typeof callback !== 'function') {
+                console.warn(`请传入正确参数，如store.watch.on('key', () => {})`)
+                return
+            }
+            key = String(key)
+            if (!this.__watchCallbacks[key]) {
+                const paths = String(key).split('.').filter(f => !!f)
+                if (!paths.length) return
+                this.__watchCallbacks[key] = {
+                    paths,
+                    value: getValueByPaths(this.data, paths),
+                    callbacks: []
+                }
+            }
+            this.__watchCallbacks[key].callbacks.push({ vm, callback })
+        },
+        off: (key: string, callback: WatchCallback) => {
+            key = String(key)
+            if (!this.__watchCallbacks[key]) return
+            this.__watchCallbacks[key].callbacks = this.__watchCallbacks[key].callbacks.filter(f => f.callback !== callback)
+        }
+    }
 
     constructor() {
         setTimeout(() => {
@@ -184,6 +229,9 @@ export class Store {
 
     public unbind(vm: any): void {
         this.__vms = this.__vms.filter(f => f.vm !== vm);
+        Object.keys(this.__watchCallbacks).forEach(key => {
+            this.__watchCallbacks[key].callbacks = this.__watchCallbacks[key].callbacks.filter(f => f.vm !== vm)
+        })
     }
 
     public update(): void {
@@ -201,6 +249,19 @@ export class Store {
                 }
             }
         });
+
+        clearTimeout(this.__watchTimer)
+        this.__watchTimer = setTimeout(() => {
+            Object.keys(this.__watchCallbacks).forEach(key => {
+                const item = this.__watchCallbacks[key]
+                const value = getValueByPaths(this.data, item.paths)
+                const oldValue = item.value
+                if (oldValue !== value) {
+                    item.value = value
+                    item.callbacks.forEach(f => f.callback(value, oldValue))
+                }
+            })
+        }, 0)
 
         if (!delayVms.length) return;
 

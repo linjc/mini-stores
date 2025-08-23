@@ -10,6 +10,7 @@ Page({
   onLoad() {
     indexStore.bind(this, '$index');
     globalStore.bind(this, '$data');
+    globalStore.watch.on('language', console.log, this)
   },
 
   handleChangeTitle() {

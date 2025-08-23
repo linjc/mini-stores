@@ -189,6 +189,51 @@ Component({
 
 注：store对象上不要重新定义update属性，避免覆盖
 
+#### 监听状态变更（watch）
+
+添加监听：store.watch.on('key', fn)
+移除监听：store.watch.off('key', fn)
+
+``` js
+import globalStore from '/stores/globalStore'
+
+Page({
+  onLoad() {
+    globalStore.bind(this, '$data');
+    // 添加监听
+    globalStore.watch.on('language', this.onWatchLang)
+  },
+  onUnload() {
+    globalStore.unbind(this)
+    // 移除监听，避免内存泄露
+    globalStore.watch.off('language', this.onWatchLang)
+  },
+  onWatchLang(value, oldValue) {
+    console.log('language change:', value, oldValue)
+  },
+});
+```
+
+如果觉得每次写移除监听很繁琐，可以在添加监听时传入组件实例（第三个参数），所有当前实例下的监听事件会在store.unbind时自动移除，参考如下：
+
+``` js
+import globalStore from '/stores/globalStore'
+
+Page({
+  onLoad() {
+    // 添加监听，第三个参数传入当前实例
+    globalStore.watch.on('language', this.onWatchLang, this)
+  },
+  onUnload() {
+    globalStore.unbind(this)
+  },
+  onWatchLang(value, oldValue) {
+    console.log('language change:', value, oldValue)
+  },
+});
+```
+
+
 ## 使用建议
 1、不一定非要使用全局状态管理，涉及到跨页面组件通信时，再考虑使用也可，mini-stores对小程序代码零破坏性，可随时加入或去掉。
 

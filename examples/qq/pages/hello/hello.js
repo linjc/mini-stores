@@ -8,6 +8,7 @@ Page({
   onLoad() {
     helloStore.bind(this, '$hello');
     globalStore.bind(this, '$data');
+    globalStore.watch.on('language', console.log, this)
   },
   
   onUnload() {
