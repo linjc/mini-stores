@@ -132,10 +132,6 @@ function getVmRoute(vm: any): string {
     return vm.route;
 }
 
-function getCurrentRoutes(): string[] {
-    return getCurrentPages().map(f => getVmRoute(f));
-}
-
 function initRoute(vm: any): string {
     return vm.route || vm.__route__;
 }
@@ -168,7 +164,7 @@ export class Store {
     private __delayTimer: ReturnType<typeof setTimeout> | null = null;
     private __isReadyComputed: boolean = false;
     private __watchTimer: any = null;
-    private __watchCallbacks: Record<string, WatchItem> = {}
+    private __watchMap: Record<string, WatchItem> = {}
     public data: PlainObject = {};
 
     public watch = {
@@ -178,21 +174,21 @@ export class Store {
                 return
             }
             key = String(key)
-            if (!this.__watchCallbacks[key]) {
+            if (!this.__watchMap[key]) {
                 const paths = String(key).split('.').filter(f => !!f)
                 if (!paths.length) return
-                this.__watchCallbacks[key] = {
+                this.__watchMap[key] = {
                     paths,
                     value: getValueByPaths(this.data, paths),
                     callbacks: []
                 }
             }
-            this.__watchCallbacks[key].callbacks.push({ vm, callback })
+            this.__watchMap[key].callbacks.push({ vm, callback })
         },
         off: (key: string, callback: WatchCallback) => {
             key = String(key)
-            if (!this.__watchCallbacks[key]) return
-            this.__watchCallbacks[key].callbacks = this.__watchCallbacks[key].callbacks.filter(f => f.callback !== callback)
+            if (!this.__watchMap[key]) return
+            this.__watchMap[key].callbacks = this.__watchMap[key].callbacks.filter(f => f.callback !== callback)
         }
     }
 
@@ -229,31 +225,29 @@ export class Store {
 
     public unbind(vm: any): void {
         this.__vms = this.__vms.filter(f => f.vm !== vm);
-        Object.keys(this.__watchCallbacks).forEach(key => {
-            this.__watchCallbacks[key].callbacks = this.__watchCallbacks[key].callbacks.filter(f => f.vm !== vm)
+        Object.keys(this.__watchMap).forEach(key => {
+            this.__watchMap[key].callbacks = this.__watchMap[key].callbacks.filter(f => f.vm !== vm)
         })
     }
 
     public update(): void {
-        const currRoutes = getCurrentRoutes();
-        const nowVmRoute = currRoutes[currRoutes.length - 1];
+        const nowVm = getNowPage();
+        const nowVmRoute = getVmRoute(nowVm)
         const delayVms: BoundVM[] = [];
 
         this.__vms.forEach(f => {
             const vmRoute = getVmRoute(f.vm);
-            if (currRoutes.includes(vmRoute)) {
-                if (nowVmRoute === vmRoute) {
-                    setState(f.vm, { [f.key]: this.data });
-                } else {
-                    delayVms.push(f);
-                }
+            if (nowVmRoute === vmRoute) {
+                setState(f.vm, { [f.key]: this.data });
+            } else {
+                delayVms.push(f);
             }
         });
 
         clearTimeout(this.__watchTimer)
         this.__watchTimer = setTimeout(() => {
-            Object.keys(this.__watchCallbacks).forEach(key => {
-                const item = this.__watchCallbacks[key]
+            Object.keys(this.__watchMap).forEach(key => {
+                const item = this.__watchMap[key]
                 const value = getValueByPaths(this.data, item.paths)
                 const oldValue = item.value
                 if (oldValue !== value) {

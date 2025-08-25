@@ -15,13 +15,7 @@ Component({
       globalStore.unbind(this)
     },
   },
-  pageLifetimes: {
-    show() {
-      helloStore.update()
-      indexStore.update()
-      globalStore.update()
-    },
-  },
+  
   methods: {
     handleChangeLang() {
       globalStore.onChangeLang()

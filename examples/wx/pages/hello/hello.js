@@ -9,11 +9,6 @@ Page({
     globalStore.bind(this, '$data');
     globalStore.watch.on('language', console.log, this)
   },
-
-  onShow() {
-    helloStore.update()
-    globalStore.update()
-  },
   
   onUnload() {
     helloStore.unbind(this)
