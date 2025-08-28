@@ -27,7 +27,6 @@ class Store extends create.Store {
     } else {
       this.data.language = 'zh_cn'
     }
-    this.update()
   }
 }
 
