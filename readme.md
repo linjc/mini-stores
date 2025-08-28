@@ -7,7 +7,6 @@
   - [页面内使用](#页面内使用)
   - [组件内使用](#组件内使用)
   - [视图上使用](#视图上使用)
-  - [更新状态](#更新状态)
   - [监听状态](#监听状态)
 - [使用建议](#使用建议)
 - [快捷链接](#快捷链接)
@@ -21,7 +20,10 @@
 ### 2、支持多例store
 一个页面或者组件可以同时使用多个store，且不破坏原有私有状态的定义。
 
-### 3、支持多平台
+### 3、简化状态触发渲染
+直接更改store的状态值，即可触发组件重渲染，无需手动调用setData方法
+
+### 4、支持多平台
 支持微信/支付宝/钉钉/百度/字节/抖音/QQ/京东等小程序使用。对于其他小程序，理论上也可以直接拿来用，使用时可自行验证。
 
 
@@ -66,7 +68,6 @@ class Store extends create.Store {
     } else {
       this.data.language = 'zh_cn'
     }
-    this.update()
   }
 }
 
@@ -100,11 +101,9 @@ Page({
   },
   handleChangeTitle() {
     globalStore.data.title = '新标题'
-    globalStore.update()
   },
   handleChangeName() {
     indexStore.changeName()
-    indexStore.update() // 如果changeName方法内调用了this.update方法，此处可以省去调用indexStore.update()
   }
 });
 ```
@@ -150,7 +149,6 @@ Component({
   methods: {
     handleChangeTitle() {
       globalStore.data.title = '新标题'
-      globalStore.update()
     },
     handleChangeName() {
       indexStore.changeName()
@@ -170,12 +168,6 @@ Component({
   <view>{{privateData}}<view>
 </view>
 ```
-
-#### 更新状态
-
-直接更改对应store.data内的值，最后调用store.upadte()即可。
-
-注：store对象上不要重新定义update属性，避免覆盖
 
 #### 监听状态
 
