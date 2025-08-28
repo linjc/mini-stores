@@ -8,29 +8,6 @@ function getType(obj: any): string {
     return Object.prototype.toString.call(obj);
 }
 
-function setComputed(storeData: PlainObject, value: any, obj: PlainObject, key: string | number): void {
-    const type = getType(value);
-    if (type === TYPE_FUNCTION) {
-        Object.defineProperty(obj, key, {
-            enumerable: true,
-            get: function () {
-                return value.call(storeData);
-            },
-            set: function () {
-                console.warn('计算属性不支持重新赋值');
-            }
-        });
-    } else if (type === TYPE_OBJECT) {
-        Object.keys(value).forEach(subKey => {
-            setComputed(storeData, value[subKey], value, subKey);
-        });
-    } else if (type === TYPE_ARRAY) {
-        (value as any[]).forEach((item, index) => {
-            setComputed(storeData, item, value, index);
-        });
-    }
-}
-
 function deepCopy(data: any): any {
     const type = getType(data);
     if (type === TYPE_OBJECT) {
@@ -162,7 +139,7 @@ function getValueByPaths(data: any, paths: string[]) {
 export class Store {
     private __vms: BoundVM[] = [];
     private __delayTimer: ReturnType<typeof setTimeout> | null = null;
-    private __isReadyComputed: boolean = false;
+    private __updateTimer: any = null;
     private __watchTimer: any = null;
     private __watchMap: Record<string, WatchItem> = {}
     public data: PlainObject = {};
@@ -194,15 +171,35 @@ export class Store {
 
     constructor() {
         setTimeout(() => {
-            this._setComputed();
-        }, 0);
+            this.data = this.__createProxy(this.data);
+        }, 0)
     }
 
-    private _setComputed(): void {
-        if (!this.__isReadyComputed) {
-            this.__isReadyComputed = true;
-            setComputed(this.data, this.data, this.data, '');
+    private __proxyCache = new WeakMap()
+    private __createProxy = (obj: Record<string, any>) => {
+        if (this.__proxyCache.has(obj)) {
+            return this.__proxyCache.get(obj)
         }
+        const proxy = new Proxy(obj, {
+            get: (target, propKey, receiver) => {
+                const value = Reflect.get(target, propKey, receiver);
+                const type = getType(value)
+                if (type === TYPE_FUNCTION) {
+                    return value.call(this.data)
+                }
+                if (type === TYPE_OBJECT) {
+                    return this.__createProxy(value)
+                }
+                return value
+            },
+            set: (target, propKey, value, receiver) => {
+                clearTimeout(this.__updateTimer)
+                this.__updateTimer = setTimeout(() => this.__update())
+                return Reflect.set(target, propKey, value, receiver);
+            },
+        })
+        this.__proxyCache.set(obj, proxy)
+        return proxy
     }
 
     public bind(vm: any, key: string): void {
@@ -212,8 +209,6 @@ export class Store {
         }
         vm.data = vm.data || {};
         vm.data[key] = null;
-
-        this._setComputed();
         setState(vm, { [key]: this.data });
 
         if (!this.__vms.some(f => f.vm === vm && f.key === key)) {
@@ -230,11 +225,10 @@ export class Store {
         })
     }
 
-    public update(): void {
+    private __update(): void {
         const nowVm = getNowPage();
         const nowVmRoute = getVmRoute(nowVm)
         const delayVms: BoundVM[] = [];
-
         this.__vms.forEach(f => {
             const vmRoute = getVmRoute(f.vm);
             if (nowVmRoute === vmRoute) {
@@ -263,5 +257,9 @@ export class Store {
         this.__delayTimer = setTimeout(() => {
             delayVms.forEach(f => setState(f.vm, { [f.key]: this.data }));
         }, 360);
+    }
+
+    public update(): void {
+        this.__update()
     }
 }
